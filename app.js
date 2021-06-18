@@ -1,9 +1,11 @@
 const express = require('express');
 const path = require('path');
-const { readFileSync } = require('fs');
+const { readFileSync, writeFile } = require('fs');
 // standard; creating server ;
 const app = express();
 
+// added middlewire to add body to request
+app.use(express.json());
 // console.log(path.sep);
 // //routing with express
 // // routes are handled seperately
@@ -30,13 +32,12 @@ const app = express();
 //creating api routes
 const tours = JSON.parse(
   readFileSync(
-    path.resolve(__dirname, 'dev-data', 'data', 'tours.json'),
+    path.resolve(__dirname, 'dev-data', 'data', 'tours-simple.json'),
     'utf8'
   )
 );
-
+// get tours
 app.get('/api/v1/tours', (req, res) => {
-  ``;
   res.status(200).json({
     status: 'success',
     results: tours.length,
@@ -45,6 +46,30 @@ app.get('/api/v1/tours', (req, res) => {
     },
   });
 });
+
+// post : to create a new tour
+app.post('/api/v1/tours', (req, res) => {
+  const newId = tours[tours.length - 1]['_id'] + 1;
+  const newTour = {
+    _id: newId,
+    ...req.body,
+  };
+  tours.push(newTour);
+  writeFile(
+    path.resolve(__dirname, 'dev-data', 'data', 'tours-simple.json'),
+    JSON.stringify(tours),
+    (err) => {
+      // 200 means okay, 201 means successfully written
+      res.status(201).json({
+        status: 'success',
+        data: {
+          tour: newTour,
+        },
+      });
+    }
+  );
+});
+
 // listening to servre
 const port = 3000;
 // notice that i dont have to specify locahost 127.0.0.1 in express // little abtraction is done here
