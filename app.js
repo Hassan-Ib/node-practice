@@ -3,55 +3,49 @@ const path = require('path');
 const { readFileSync, writeFile } = require('fs');
 // standard; creating server ;
 const app = express();
-
 // added middlewire to add body to request
 app.use(express.json());
-// console.log(path.sep);
-// //routing with express
-// // routes are handled seperately
-// // app.get(route, callback{req,res})
-// app.get('/', (req, res) => {
-//   // send -- responds with content type text/html
-//   // json -- responds with content type application/json
-//   res
-//     .status(200)
-//     .json({ message: 'hello world from the server side', app: 'natour' });
-// });
-// app.get('/htmlpage', (req, res) => {
-//   res.status(200).send(`
-//     <html>
-//         <head>
-//             <title>rest html page</title>
-//         </head>
-//         <body>
-//             <h1> hello world from the backend</h1>
-//         </body>
-//     </html>`);
-// });
 
-//creating api routes
+//  custom middleware
+
+app.use((req, res, next) => {
+  console.log('ello from the middleware');
+  //next is necessary of the server will never respond
+  next();
+});
+
+// middle ware to add timeStamp to the request
+
+app.use((req, res, next) => {
+  req.requestAt = new Date().toISOString();
+  next();
+});
+
+// url with parameters needs to be with :value
+// to make a parameter optional we add ? at the param to be optonal
+// post : to create a new tour
+
 const tours = JSON.parse(
   readFileSync(
     path.resolve(__dirname, 'dev-data', 'data', 'tours-simple.json'),
     'utf8'
   )
 );
-// get tours
-app.get('/api/v1/tours', (req, res) => {
+
+const getAllTours = (req, res) => {
   res.status(200).json({
     status: 'success',
     results: tours.length,
+    timeStamp: req.requestAt,
     data: {
       tours,
     },
   });
-});
-
-// post : to create a new tour
-app.post('/api/v1/tours', (req, res) => {
-  const newId = tours[tours.length - 1]['_id'] + 1;
+};
+const createTour = (req, res) => {
+  const newId = tours[tours.length - 1].id + 1;
   const newTour = {
-    _id: newId,
+    id: newId,
     ...req.body,
   };
   tours.push(newTour);
@@ -68,7 +62,60 @@ app.post('/api/v1/tours', (req, res) => {
       });
     }
   );
-});
+};
+
+const getTour = (req, res) => {
+  const id = Number(req.params.id);
+  const tour = tours.find((el) => el.id === id);
+  if (!tour) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Invalid Id',
+    });
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { tour },
+  });
+};
+// get tours
+const updateTour = (req, res) => {
+  const id = Number(req.params.id);
+  const requestBody = req.body;
+  console.log(requestBody);
+  if (id > tours.length) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Invalid Id',
+    });
+  }
+
+  res.status(201).json({
+    status: 'success',
+    data: `<update tour...${id}>`,
+  });
+};
+const deleteTour = (req, res) => {
+  const id = Number(req.params.id);
+  if (id > tours.length) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Invalid Id',
+    });
+  }
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+};
+
+app.route('/api/v1/tours').get(getAllTours).post(createTour);
+
+app
+  .route('/api/v1/tours/:id')
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
 
 // listening to servre
 const port = 3000;
