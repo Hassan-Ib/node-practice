@@ -28,10 +28,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// url with parameters needs to be with :value
-// to make a parameter optional we add ? at the param to be optonal
-// post : to create a new tour
-
 // ROUTE HANDLERS
 
 app.use('/api/v1/tours', tourRouter);
