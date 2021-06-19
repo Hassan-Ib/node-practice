@@ -27,16 +27,8 @@ app.use((req, res, next) => {
   req.requestAt = new Date().toISOString();
   next();
 });
-
-// ROUTE HANDLERS
-
+// mounting routes to base route
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
-// STARTING SERVER
-// listening to servre
-const port = 3000;
-// notice that i dont have to specify locahost 127.0.0.1 in express // little abtraction is done here
-app.listen(port, () => {
-  console.log(`server running in port ${port}`);
-});
+module.exports = app;
