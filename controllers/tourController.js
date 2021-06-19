@@ -23,7 +23,7 @@ const checkBody = (req, res, next) => {
   if (!body.name || !body.price) {
     return res.status(404).json({
       status: 'fail',
-      message: 'bady request, no name or price property',
+      message: 'Missing name or price  =-',
     });
   }
   next();
