@@ -1,9 +1,9 @@
 const app = require('./app');
-// STARTING SERVER
-// listening to servre
 
+// port
 const port = 3000;
-// notice that i dont have to specify locahost 127.0.0.1 in express // little abtraction is done here
+
+// listening to server at port 3000
 app.listen(port, () => {
-  console.log(`server running in port ${port}`);
+  console.log('server running at port 3000');
 });

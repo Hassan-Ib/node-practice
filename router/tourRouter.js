@@ -1,23 +1,17 @@
 const express = require('express');
 const {
   getAllTours,
-  getTour,
   createTour,
-  deleteTour,
-  updateTour,
-  checkId,
   checkBody,
-} = require('../controllers/tourController');
-// url with parameters needs to be with :value
-// to make a parameter optional we add ? at the param to be optonal
-// post : to create a new tour
+  getTour,
+  updateTour,
+  deleteTour,
+  checkId,
+} = require('../controller/tourController');
 
 const router = express.Router();
-
-router.param('id', checkId);
-
+router.param('id', checkId); // supply the param you want to check
 router.route('/').get(getAllTours).post(checkBody, createTour);
-
 router.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
 
 module.exports = router;
