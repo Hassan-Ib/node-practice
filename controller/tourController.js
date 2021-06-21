@@ -58,8 +58,8 @@ const createTour = (req, res) => {
 };
 
 const checkId = (req, res, next, value) => {
-  const isValueNaN = Number.isNaN(Number(value));
-  if (isValueNaN || Number(value) > tours.length) {
+  const tour = tours.find((el) => el.id === Number(value));
+  if (!tour) {
     return res.status(404).json({
       status: 'failed',
       message: 'Invalid Id',
