@@ -1,6 +1,6 @@
 const express = require('express');
-const tourRouter = require('./router/tourRouter');
-const userRouter = require('./router/userRouter');
+const tourRouter = require('./routes/tourRoutes');
+const userRouter = require('./routes/userRoutes');
 // creating a server
 
 const morgan = require('morgan');
