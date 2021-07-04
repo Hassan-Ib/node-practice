@@ -81,18 +81,19 @@ const getTour = async (req, res) => {
 };
 const updateTour = async (req, res) => {
   try {
-    // const tours = getTours();
-    const id = Number(req.params.id);
-
+    const tour = await Tours.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
     res.status(201).json({
       status: 'success',
       timeStamp: req.timeStamp,
       data: {
-        // tour: newTours,
+        tour,
       },
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(400).json({
       status: 'failed',
       message: 'internal server error ',
     });
