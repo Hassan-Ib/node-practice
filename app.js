@@ -5,7 +5,6 @@ const userRouter = require('./router/userRouter');
 
 const morgan = require('morgan');
 
-console.log('hello world');
 const app = express();
 // want  my app req to have body
 
