@@ -23,9 +23,26 @@ const Tours = require('./../models/tourModel');
 // };
 
 const getAllTours = async (req, res) => {
-  // const tours = await getTours();
+  // querying bool ex from req ?key[gte|gt|lte|lt]=value => {key : {gte : value}}
   try {
-    const tours = await Tours.find();
+    //BUILDING QUERY
+    const queryObj = { ...req.query };
+    const excludeQuery = ['page', 'limit', 'sort', 'fields'];
+    excludeQuery.forEach((el) => delete queryObj[el]);
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    console.log(req.query, JSON.parse(queryStr));
+
+    const query = Tours.find(JSON.parse(queryStr));
+    // const query = Tours.find()
+    //   .where('difficulty')
+    //   .equals('easy')
+    //   .where('duration')
+    //   .equals(5);
+
+    // EXECUTE QUERY
+    const tours = await query;
+
     res.status(200).json({
       status: 'success',
       timeStamp: req.timeStamp,
@@ -43,7 +60,6 @@ const getAllTours = async (req, res) => {
 };
 
 const createTour = async (req, res) => {
-  // const tours = await getTours();
   try {
     const body = req.body;
     const newTour = await Tours.create(req.body);
@@ -93,28 +109,25 @@ const updateTour = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(400).json({
+    res.status(404).json({
       status: 'failed',
-      message: 'internal server error ',
+      message: error,
     });
   }
 };
 
 // delete tour
 const deleteTour = async (req, res) => {
-  // const tours = getTours();
   try {
-    const id = Number(req.params.id);
-
-    res.status(201).json({
+    await Tours.findByIdAndDelete(req.params.id);
+    res.status(204).json({
       status: 'success',
-      message: 'tour deleted',
+      data: null,
     });
   } catch (error) {
-    console.log(error);
     res.status(505).json({
       status: 'failed',
-      message: 'internal error',
+      message: error,
     });
   }
 };
