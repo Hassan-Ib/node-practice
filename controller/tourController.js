@@ -23,18 +23,53 @@ const Tours = require('./../models/tourModel');
 // };
 
 const getAllTours = async (req, res) => {
-  // querying bool ex from req ?key[gte|gt|lte|lt]=value => {key : {gte : value}}
   try {
-    //BUILDING QUERY
-    const queryObj = { ...req.query };
-    const excludeQuery = ['page', 'limit', 'sort', 'fields'];
+    //COMMON PRACTICE OF querying with bool with exp from req
+    // /tours?key[gte|gt|lte|lt]=value&price=200 => {key : {gte : value}, price : 200}
+    //BUILDING BASIC QUERY WITHOUT THE SPECIAL FIELDS
+    const queryObj = { ...req.query }; //shallow copy
+    const excludeQuery = ['page', 'limit', 'sort', 'fields']; // fileds to be on the look out for
     excludeQuery.forEach((el) => delete queryObj[el]);
     let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    console.log(req.query, JSON.parse(queryStr));
 
-    const query = Tours.find(JSON.parse(queryStr));
-    // const query = Tours.find()
+    // MUTATING QUERY
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    // get query from db;
+    let query = Tours.find(JSON.parse(queryStr));
+
+    //2) Sort
+    if (req.query.sort) {
+      // get field/fields to sort with e.g price,-rating => "price -rating"
+      let sortQuery = req.query.sort.split(',').join(' ');
+      //check if it as ascending or descending ordder
+      query.sort(sortQuery);
+    } else {
+      query.sort('-createdAt');
+    }
+    //3) Field
+    if (req.query.fields) {
+      const fieldsQuery = req.query.fields.split(',').join(' ');
+      console.log(fieldsQuery);
+      query.select(fieldsQuery);
+    }
+    query.select('-__v');
+
+    //4) Pagination  //.skip().limit()
+
+    let { limit, page } = req.query;
+    page = Number(page) || 1;
+    limit = Number(limit) || 100;
+    const skip = (page - 1) * limit;
+    query.skip(skip).limit(limit);
+
+    if (req.query.page) {
+      const numberOfDoc = await Tours.countDocuments();
+      console.log(numberOfDoc, skip);
+      if (skip >= numberOfDoc) throw new Error("This page doesn't exist");
+    }
+
+    // const query = Tours.find()'
     //   .where('difficulty')
     //   .equals('easy')
     //   .where('duration')
