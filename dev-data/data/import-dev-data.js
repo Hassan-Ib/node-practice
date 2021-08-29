@@ -50,3 +50,4 @@ if (command === '--import') {
   console.log(command);
 }
 console.log(process.argv);
+// command line use  Node fileName --[import or delete];
