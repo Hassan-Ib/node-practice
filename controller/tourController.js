@@ -153,9 +153,11 @@ exports.getMonthlyPlans = async (req, res) => {
     const { year } = req.params;
     const stats = await Tour.aggregate([
       {
+        // using data in startDate array to spread the doc.
         $unwind: '$startDates',
       },
       {
+        // selecting dates that are with specified year frame
         $match: {
           startDates: {
             $gte: new Date(`${year}-01-01`),
@@ -164,25 +166,31 @@ exports.getMonthlyPlans = async (req, res) => {
         },
       },
       {
+        // creating new data by grouping
         $group: {
+          // using start dates as id
           _id: { $month: '$startDates' },
+          // number of tours that starts at the same date
           numTours: { $sum: 1 },
+          // names of the tours in the same group
           tours: { $push: '$name' },
         },
       },
 
       {
         $addFields: {
+          // adding a field of month using id
           month: '$_id',
         },
       },
       {
         $project: {
+          // removing id field
           _id: 0,
         },
       },
       {
-        // sort pipeline
+        // sort pipeline by month(originaly startDate)
         $sort: { month: 1 },
       },
     ]);
