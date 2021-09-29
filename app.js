@@ -1,9 +1,11 @@
 const express = require('express');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
-// creating a server
-
+const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controller/errorController');
 const morgan = require('morgan');
+
+// creating a server
 
 const app = express();
 // want  my app req to have body
@@ -25,4 +27,9 @@ app.use((req, res, next) => {
 // tour router
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
+});
+
+app.use(globalErrorHandler);
 module.exports = app;

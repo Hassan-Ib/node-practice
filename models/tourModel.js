@@ -3,7 +3,7 @@ const slugify = require('slugify');
 const validator = require('validator');
 
 // create schema
-const tourSchema = mongoose.Schema(
+const tourSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -70,6 +70,7 @@ const tourSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    newField: String,
   },
   {
     toJSON: { virtuals: true },
@@ -133,6 +134,7 @@ tourSchema.pre('aggregate', function (next) {
   next();
 });
 //todo 2 create a model from the schema => creates collection model
+console.log(mongoose.models);
 const Tours = mongoose.model('Tour', tourSchema);
 
 module.exports = Tours;
