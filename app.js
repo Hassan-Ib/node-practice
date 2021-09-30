@@ -21,6 +21,8 @@ app.use(express.json());
 
 app.use((req, res, next) => {
   req.timeStamp = new Date().toISOString();
+  console.log(x);
+
   next();
 });
 

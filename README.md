@@ -86,21 +86,17 @@ const path = require('path');
 const express = require('express');
 
 const router = express.Router();
-const getUser = (req, res) => {
-  console.log('route response');
-};
+
 // absolute path here means the path after port
-router.route('/').get(getUser).post(callback);
-module.exports = router;
-// in app.js
-const express = require('express');
-const userRouter = require('user');
-const app = express();
-// using the router ad middleware
-app.use('api/v1/users', userRouter);
+
+router.route('/').get(getHandler).post(callback);
+
+// using the router as middleware
+
+app.use('api/v1/users', router);
 ```
 
-### express.listen(port, callback)
+### app.listen(port, callback)
 
 ### express middlewares
 
@@ -121,3 +117,92 @@ app.use('api/v1/users', userRouter);
 4. mongoDB methods
 
 # Mongoose
+
+# error handling middleware for express app [catchAsync file](./utils/catchAsync.js)
+
+```javascript
+
+// custome error
+class AppError extents Error {
+   constructor(message, statusCode){
+      super(message);
+      this.statusCode = statusCode;
+      this.status = `${statusCode}`.startsWith('4') ? "fail" : "error";
+      this.isOperational = true // this is to identify handled error at prod mode
+
+      Error.captureStactTrace(this, this.constructor)
+   }
+}
+
+// catch error (async error)
+const catchAsync = handler => (res, req, next)=>{
+   return handler(req, res, next).catch(next);
+   // next recieves the err argument an skips to the express error middleware
+   // next can be use in handlers to throw error that gets forwarded to the error middleware.
+}
+// express middleware that handles all caught error and rejected promises in the app
+app.use((err, req, res, next)=>{
+   err.statusCode = err.statusCode || 500;
+   err.status = err.status || "error";
+
+   if(process.env.NODE_ENV === "development"){
+      res.status(err.statusCode).json({
+         status : err.status,
+         message : err.message,
+         error : error,
+         stack : err.stack
+      })
+   }
+   if(process.env.NODE_ENV === "production"){
+      let error = { ...err };
+      if (err.name === 'CastError') error = handleCastErrorDB(error);
+      if (err.code === 11000) error = handleDuplicateErrorDB(error, err.errmsg);
+      if (err.name === 'ValidationError') error = handleValidationErrorDB(err);
+
+      if(err.isOperational){
+         res.status(err.statusCode).json({
+         status: err.status,
+         message: err.message,
+      });
+      }else {
+         return res
+         .status(500)
+         .json({ status: 'fail', message: 'something went very wrong' });
+      }
+      err.message = err.message || "something went very very wrong"
+
+   }
+   res.status(err.statusCode).json({
+      status : "fail",
+      error : err.message
+   })
+})
+
+```
+
+# unHandled Routes, Operation error , unHandled rejection and unCaught Exceptions
+
+```javascript
+// we use events to handle unHandled rejection and unCaught rejection
+// unCaught event handler should be place before the app starts running
+// unHandled rejection listener can be placed anywhere since it waits for promises
+
+// unCaught Exception
+process.on('uncaughtException', (err) => {
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
+// unHandle rejection
+
+process.on('unhandleRejection', (err) => {
+  console.log(err.name, err.message);
+  // we have to wait for server to abort all async subscriptions
+  // gracefully shutting down the server
+  server.close(() => {
+    process.exit(1);
+  });
+});
+```
+
+#
