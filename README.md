@@ -180,7 +180,7 @@ app.use((err, req, res, next)=>{
 
 ```
 
-# unHandled Routes, Operation error , unHandled rejection and unCaught Exceptions
+# Operation error , unHandled rejection and unCaught Exceptions
 
 ```javascript
 // we use events to handle unHandled rejection and unCaught rejection
@@ -205,4 +205,10 @@ process.on('unhandleRejection', (err) => {
 });
 ```
 
-#
+# app unhanled routes
+
+```javascript
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
+});
+```
