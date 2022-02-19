@@ -85,12 +85,12 @@ const toWeek = (duration) => {
   return Math.ceil(duration / 7);
 };
 
-// virtual fields
+// virtual fields // cannnot be queryed for in the db but gets returned after actual query
 tourSchema.virtual('durationWeek').get(function () {
   return toWeek(this.duration);
 });
 
-// DOCUMENT MIDDLEWARE
+// DOCUMENT MIDDLEWARE    // runs before or after a query depending on event [save, find]
 
 tourSchema.pre('save', function (next) {
   // this points to the document being save
@@ -126,6 +126,7 @@ tourSchema.post(/^find/, function (doc, next) {
   console.log(`query time is ${Date.now() - this.start} milliseconds`);
   next();
 });
+
 // AGGREGATION MiddleWare
 tourSchema.pre('aggregate', function (next) {
   // this points to query here

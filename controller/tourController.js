@@ -48,8 +48,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
     return next(new AppError('No tour found with this id ${tourID}', 404));
   }
   // console.log(tour);
-  if (!tour) {
-  }
+
   return res.status(200).json({
     status: 'success',
     data: {

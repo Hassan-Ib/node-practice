@@ -3,6 +3,9 @@ const User = require('./../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const jwt = require('jsonwebtoken');
+
+// method to create token
+
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
@@ -13,6 +16,15 @@ exports.signup = catchAsync(async (req, res, next) => {
   const {
     body: { name, password, email, passwordConfirm },
   } = req;
+  if (!name || !password || !email || !passwordConfirm)
+    next(
+      new AppError(
+        `{your credentail is missing ${
+          !name || !password || !email || !passwordConfirm
+        }`,
+        401
+      )
+    );
   const newUser = await User.create({
     name,
     password,
@@ -59,7 +71,7 @@ exports.login = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.protect = catchAsync(async (req, res, next) => {
+exports.protect = catchAsync(async (req, _, next) => {
   // 1) Getting the token and checking if its there
   let token;
   if (
@@ -71,13 +83,64 @@ exports.protect = catchAsync(async (req, res, next) => {
   if (!token)
     next(new AppError('you are not logged in pls login to get access'), 401);
 
-  // 2) verification token
+  // 2) verification token and decode token jwt.verify is a promise (the .then().catch() type)
+  // so we use node promisify from util lib method to promisify it.
+
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
   console.log('decoded', decoded);
 
   // 3) check if user still exist
+  const user = await User.findById(decoded.id);
+  if (!user)
+    next(
+      new AppError(
+        'The user belonging to this token does no longer exist.',
+        401
+      )
+    );
 
-  // 4) check if user change password after the jwt was issued
+  // 4) check if user change password after the jwt was issued (iat : issued at);
+  if (user.passwordChangedAt(decoded.iat)) {
+    next(
+      new AppError(
+        'User password has been changed recently pls try logging back in',
+        401
+      )
+    );
+  }
 
+  req.user = user;
   next();
+});
+
+exports.claimProtect =
+  (...roles) =>
+  (req, _, next) => {
+    const {
+      user: { role },
+    } = req;
+
+    const isAuthorized = roles.includes(role);
+    if (!isAuthorized) {
+      next(new AppError('you are no authorized to use this endpoint to', 403)); // 403 : forbidden
+    }
+
+    next();
+  };
+
+exports.forgetPassword = catchAsync(async (req, res) => {
+  // steps to setup forget password functionality
+  // TODO: set up forget password
+  // [x] - Check if user exists
+  // [ ] - generate resetToken
+  // [ ] - send resetToken to user email
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new AppError('No user found with this email ${email}', 404));
+  }
+
+  // generating token
+  return;
 });

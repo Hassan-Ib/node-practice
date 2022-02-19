@@ -1,17 +1,21 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+// dotenv usage
 dotenv.config({ path: './config.env' });
+
+// uncaught exception
+// gracefull shut down for uncaught sync error
 process.on('uncaughtException', (err) => {
   console.log('UNCAUGHT EXCEPTION! ✨ shutting down...');
   console.log(err.name, err.message);
-  // shutting down server gracefully : this shutdown all async codes hence unCaught exceptions
+  // shutting down server gracefully : this shutdown all sync codes hence unCaught exceptions
   process.exit(1);
 });
 const app = require('./app');
 
 const DB = process.env.DATABASE_LOCAL;
-//todo 1 connect to the DB with mongoose
-// connecting to DB  with mongoose
+// TODO: 1 connect to the DB with mongoose
+// connecting to DB  with mongoose async
 mongoose
   .connect(DB, {
     useNewUrlParser: true,
@@ -39,5 +43,3 @@ process.on('handledRejection', (err) => {
     process.exit(1);
   });
 });
-
-// unCaugth Exceptions  : for sync codes

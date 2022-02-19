@@ -33,7 +33,7 @@ module.exports = class APIFeatures {
 
   sort() {
     if (this.queryObj.sort) {
-      // get field/fields to sort with e.g price,-rating => "price -rating"
+      // get field/fields to sort with e.g price,-rating => ["price", "-rating"] "price -rating"
       let sortQuery = this.queryObj.sort.split(',').join(' ');
       //check if it is ascending or descending ordder
       console.log(sortQuery);
@@ -41,7 +41,6 @@ module.exports = class APIFeatures {
     } else {
       this.query = this.query.sort('-createdAt');
     }
-
     return this;
   }
 
@@ -49,7 +48,6 @@ module.exports = class APIFeatures {
     if (this.queryObj.fields) {
       const fieldsQuery = this.queryObj.fields.split(',').join(' ');
       console.log('fields query = ', fieldsQuery);
-
       this.query = this.query.select(fieldsQuery);
     }
     return this;
