@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = mongoose.Schema({
   name: {
@@ -21,7 +22,7 @@ const userSchema = mongoose.Schema({
   },
   photo: String,
   password: {
-    select: false,
+    select: false, // to exclude password when query
     type: String,
     required: [true, 'Please provide a password'],
     minLength: 8,
@@ -41,6 +42,8 @@ const userSchema = mongoose.Schema({
   passwordChangedAt: {
     type: Date,
   },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 });
 
 userSchema.pre('save', async function (next) {
@@ -73,6 +76,21 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   }
 
   return false;
+};
+
+userSchema.methods.generatePasswordResetToken = function () {
+  // TODO: setup forget token
+  // [x] - generate randow string
+  // [x] - hash the random string and save it to db
+  // [x] - return generated random string
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+  this.passwordResetExpires = Date.now() + 10 * 60 * 60;
+  console.log(resetToken, this.passwordResetToken);
+  return resetToken;
 };
 
 const Users = mongoose.model('User', userSchema);

@@ -123,24 +123,42 @@ exports.claimProtect =
 
     const isAuthorized = roles.includes(role);
     if (!isAuthorized) {
-      next(new AppError('you are no authorized to use this endpoint to', 403)); // 403 : forbidden
+      next(new AppError('you are no authorized to use this endpoint to', 403)); // XXX: 403 - forbidden
     }
 
     next();
   };
 
-exports.forgetPassword = catchAsync(async (req, res) => {
+exports.forgetPassword = catchAsync(async (req, res, next) => {
   // steps to setup forget password functionality
   // TODO: set up forget password
   // [x] - Check if user exists
-  // [ ] - generate resetToken
+  // [x] - generate resetToken
   // [ ] - send resetToken to user email
   const { email } = req.body;
+  if (!email) next(new AppError('EMAIL MUST BE PROVIDED', 401));
   const user = await User.findOne({ email });
   if (!user) {
-    return next(new AppError('No user found with this email ${email}', 404));
+    return next(new AppError(`No user found with this email ${email}`, 404));
   }
 
+  const resetToken = user.generatePasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  const resetURL = `${req.protocol}://${req.get(
+    'host'
+  )}/api/v1/users/resetpassword/${resetToken}`;
+
+  const message = `forget your password submit a PATCH request with your password and confirm password to:${resetURL}\nIf you don't forget your password, please ignore this message`;
+
   // generating token
-  return;
+  // return res.status(200).json({
+  //   // successfull: true,
+  //   status: 'success',
+  //   data: resetToken,
+  // });
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  console.log('resetpassword');
 });
