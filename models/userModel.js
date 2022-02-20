@@ -66,7 +66,7 @@ userSchema.methods.isCorrectPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+userSchema.methods.checkPasswordChangedAfterLogged = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimeStamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
@@ -78,20 +78,30 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   return false;
 };
 
+// TODO: setup forget token
+// [x] - generate randow string
+// [x] - hash the random string and save it to db
+// [x] - return generated random string
+
 userSchema.methods.generatePasswordResetToken = function () {
-  // TODO: setup forget token
-  // [x] - generate randow string
-  // [x] - hash the random string and save it to db
-  // [x] - return generated random string
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-  this.passwordResetExpires = Date.now() + 10 * 60 * 60;
-  console.log(resetToken, this.passwordResetToken);
+  // ADDING TO MINUTE 1000 * 60 * 10 (1000 miliseconds = 1 seconds, 60 seconds = 1 minute )
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  // console.log(resetToken, this.passwordResetToken);
   return resetToken;
 };
+
+userSchema.pre('save', function (next) {
+  // if password is not modified or document is new, exit this code and move to the next phase
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000; // subtracting one sec
+  next();
+});
 
 const Users = mongoose.model('User', userSchema);
 

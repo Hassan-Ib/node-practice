@@ -14,9 +14,10 @@ exports.mailer = async (options) => {
   // 2 - define email options
   const mailOptions = {
     from: 'Hassan Ibrahim <hello@ibrahim.io>',
-    to: options.email,
+    to: options.to,
     subject: options.subject,
-    text: options.message,
+    text: options.text,
+    html: options.html ?? null,
   };
   // 3 - actually send email
   await transporter.sendMail(mailOptions);
