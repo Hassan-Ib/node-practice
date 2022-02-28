@@ -11,6 +11,7 @@ exports.getTopCheap = (req, _, next) => {
 };
 
 exports.getAllTours = catchAsync(async (req, res, next) => {
+  console.log('query', req.query);
   const features = new APIFeatures(Tour.find(), req.query)
     .filter()
     .sort()
